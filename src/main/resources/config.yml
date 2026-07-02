@@ -1,0 +1,49 @@
+filter:
+  player-commands: true
+  command-blocks: true
+  command-block-minecarts: true
+  console: false
+  other-non-player-senders: true
+  normalize-roots-lowercase: true
+
+bypass-usernames: []
+
+blocked-roots:
+  - stop
+  - restart
+  - reload
+  - rl
+  - op
+  - deop
+  - ban
+  - ban-ip
+  - kick
+  - whitelist
+  - kill
+  - clear
+  - execute
+  - function
+  - data
+  - damage
+  - worldborder
+  - difficulty
+  - gamerule
+  - plugins
+  - pl
+  - minecraft:kill
+  - bukkit:reload
+  - paper:restart
+  - paper
+
+blocked-selectors:
+  - "@e"
+  - "@a"
+  - "@r"
+
+messages:
+  blocked-player-command: "That command is disabled for camp safety. Ask an instructor if you need help."
+  blocked-command-block: "A command block command was blocked for camp safety."
+
+logging:
+  log-blocked-commands: true
+  notify-instructors: true
