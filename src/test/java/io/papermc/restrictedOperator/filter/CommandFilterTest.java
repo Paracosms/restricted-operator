@@ -58,4 +58,40 @@ class CommandFilterTest {
         assertTrue(filter.check("/say hello@e", CommandSourceType.PLAYER).allowed());
         assertTrue(filter.check("/say @everyone", CommandSourceType.PLAYER).allowed());
     }
+
+    @Test
+    void allowsSafeCommandBlockCommand() {
+        CommandCheckResult result = filter.check("say hello", CommandSourceType.COMMAND_BLOCK);
+
+        assertTrue(result.allowed());
+        assertEquals(CommandCheckResult.Reason.ALLOWED, result.reason());
+        assertEquals("say", result.root());
+    }
+
+    @Test
+    void blocksCommandBlockKillCommand() {
+        CommandCheckResult result = filter.check("kill @p", CommandSourceType.COMMAND_BLOCK);
+
+        assertFalse(result.allowed());
+        assertEquals(CommandCheckResult.Reason.BLOCKED_ROOT, result.reason());
+        assertEquals("kill", result.root());
+    }
+
+    @Test
+    void blocksNamespacedCommandBlockKillCommand() {
+        CommandCheckResult result = filter.check("minecraft:kill @p", CommandSourceType.COMMAND_BLOCK);
+
+        assertFalse(result.allowed());
+        assertEquals(CommandCheckResult.Reason.BLOCKED_ROOT, result.reason());
+        assertEquals("minecraft:kill", result.root());
+    }
+
+    @Test
+    void blocksRepeatingCommandBlockSelectorCommand() {
+        CommandCheckResult result = filter.check("tp @e ~ ~1 ~", CommandSourceType.COMMAND_BLOCK);
+
+        assertFalse(result.allowed());
+        assertEquals(CommandCheckResult.Reason.BLOCKED_SELECTOR, result.reason());
+        assertEquals("@e", result.matchedPattern());
+    }
 }

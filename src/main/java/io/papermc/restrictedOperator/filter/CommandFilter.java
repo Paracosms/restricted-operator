@@ -1,3 +1,5 @@
+// Determines if commands should be restricted according to config.yml
+
 package io.papermc.restrictedOperator.filter;
 
 import io.papermc.restrictedOperator.CommandCheckResult;
@@ -17,6 +19,7 @@ public final class CommandFilter {
         this.normalizeRootsLowercase = normalizeRootsLowercase;
     }
 
+    // Parses commands
     public CommandCheckResult check(String rawCommand, CommandSourceType sourceType) {
         if (rawCommand == null) {
             return CommandCheckResult.emptyCommand();
@@ -36,10 +39,12 @@ public final class CommandFilter {
         String rawRoot = tokens[0];
         String normalizedRoot = normalizeRootsLowercase ? rawRoot.toLowerCase(Locale.ROOT) : rawRoot;
 
+        // Block all commands starting with blocked-roots in config.yml
         if (blockedRoots.contains(normalizedRoot)) {
             return CommandCheckResult.blockedRoot(normalizedRoot, normalizedRoot);
         }
 
+        // Tokenize to block selectors like @e
         for (int i = 1; i < tokens.length; i++) {
             String normalizedToken = tokens[i].toLowerCase(Locale.ROOT);
             for (String blockedSelector : blockedSelectors) {

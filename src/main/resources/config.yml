@@ -1,5 +1,5 @@
 filter:
-  player-commands: true
+  player-chat-commands: true
   command-blocks: true
   command-block-minecarts: true
   console: false
@@ -42,8 +42,15 @@ blocked-selectors:
 
 messages:
   blocked-player-command: "That command is disabled for camp safety. Ask an instructor if you need help."
-  blocked-command-block: "A command block command was blocked for camp safety."
+  blocked-command-block-nearby: "A command block command near you was blocked for camp safety. Ask an instructor for help."
+  blocked-command-block-editor: "A command block you placed or edited tried to run a disabled command. Ask an instructor for help."
+  blocked-instructor-notify: "&e[RestrictedOperator]&f Blocked {source} at {location}: {reason}; command=&7{command}"
+
+notifications:
+  notify-instructors: true
+  notify-nearby-players: true
+  nearby-radius-blocks: 16
+  cooldown-seconds-per-source: 10
 
 logging:
   log-blocked-commands: true
-  notify-instructors: true

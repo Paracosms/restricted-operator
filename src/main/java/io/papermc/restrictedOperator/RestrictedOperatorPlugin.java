@@ -1,3 +1,4 @@
+// Main entry class
 package io.papermc.restrictedOperator;
 
 import io.papermc.restrictedOperator.config.ConfigManager;

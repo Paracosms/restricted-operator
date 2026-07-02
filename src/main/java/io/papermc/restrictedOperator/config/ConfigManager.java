@@ -1,3 +1,5 @@
+// Bridge between config.yml and java classes
+
 package io.papermc.restrictedOperator.config;
 
 import io.papermc.restrictedOperator.filter.CommandFilter;
@@ -12,11 +14,18 @@ import java.util.Set;
 public final class ConfigManager {
     private final JavaPlugin plugin;
 
-    private boolean playerCommandsEnabled;
+    private boolean playerChatCommandsFilterEnabled;
+    private boolean commandBlocksFilterEnabled;
+    private boolean commandBlockMinecartsFilterEnabled;
     private Set<String> bypassUsernames;
     private String blockedPlayerCommandMessage;
+    private String blockedCommandBlockNearbyMessage;
+    private String blockedInstructorNotifyMessage;
     private boolean logBlockedCommands;
     private boolean notifyInstructors;
+    private boolean notifyNearbyPlayers;
+    private int nearbyRadiusBlocks;
+    private long notificationCooldownSecondsPerSource;
     private CommandFilter commandFilter;
 
     public ConfigManager(JavaPlugin plugin) {
@@ -27,14 +36,29 @@ public final class ConfigManager {
         plugin.reloadConfig();
         FileConfiguration config = plugin.getConfig();
 
-        playerCommandsEnabled = config.getBoolean("filter.player-commands", true);
+        playerChatCommandsFilterEnabled = config.getBoolean("filter.player-chat-commands", true);
+        commandBlocksFilterEnabled = config.getBoolean("filter.command-blocks", true);
+        commandBlockMinecartsFilterEnabled = config.getBoolean("filter.command-block-minecarts", true);
         bypassUsernames = normalizeList(config.getStringList("bypass-usernames"));
         blockedPlayerCommandMessage = config.getString(
                 "messages.blocked-player-command",
-                "That command is disabled for camp safety. Ask an instructor if you need help."
+                "That command is disabled." // hardcoded fallback string
+        );
+        blockedCommandBlockNearbyMessage = config.getString(
+                "messages.blocked-command-block-nearby",
+                config.getString("messages.blocked-command-block", "A command block command was blocked.")
+        );
+        blockedInstructorNotifyMessage = config.getString(
+                "messages.blocked-instructor-notify",
+                "&e[RestrictedOperator]&f Blocked {source} at {location}. reason=[{reason}] command=&7{command}"
         );
         logBlockedCommands = config.getBoolean("logging.log-blocked-commands", true);
-        notifyInstructors = config.getBoolean("logging.notify-instructors", true);
+        notifyInstructors = config.contains("notifications.notify-instructors")
+                ? config.getBoolean("notifications.notify-instructors", true)
+                : config.getBoolean("logging.notify-instructors", true);
+        notifyNearbyPlayers = config.getBoolean("notifications.notify-nearby-players", true);
+        nearbyRadiusBlocks = config.getInt("notifications.nearby-radius-blocks", 16);
+        notificationCooldownSecondsPerSource = config.getLong("notifications.cooldown-seconds-per-source", 10L);
 
         boolean normalizeRootsLowercase = config.getBoolean("filter.normalize-roots-lowercase", true);
         Set<String> blockedRoots = normalizeList(config.getStringList("blocked-roots"));
@@ -42,12 +66,28 @@ public final class ConfigManager {
         commandFilter = new CommandFilter(blockedRoots, blockedSelectors, normalizeRootsLowercase);
     }
 
-    public boolean isPlayerCommandsEnabled() {
-        return playerCommandsEnabled;
+    public boolean isPlayerChatCommandsFilterEnabled() {
+        return playerChatCommandsFilterEnabled;
+    }
+
+    public boolean isCommandBlocksFilterEnabled() {
+        return commandBlocksFilterEnabled;
+    }
+
+    public boolean isCommandBlockMinecartsFilterEnabled() {
+        return commandBlockMinecartsFilterEnabled;
     }
 
     public String getBlockedPlayerCommandMessage() {
         return blockedPlayerCommandMessage;
+    }
+
+    public String getBlockedCommandBlockNearbyMessage() {
+        return blockedCommandBlockNearbyMessage;
+    }
+
+    public String getBlockedInstructorNotifyMessage() {
+        return blockedInstructorNotifyMessage;
     }
 
     public boolean isBypassUsername(String username) {
@@ -60,6 +100,18 @@ public final class ConfigManager {
 
     public boolean shouldNotifyInstructors() {
         return notifyInstructors;
+    }
+
+    public boolean shouldNotifyNearbyPlayers() {
+        return notifyNearbyPlayers;
+    }
+
+    public int getNearbyRadiusBlocks() {
+        return nearbyRadiusBlocks;
+    }
+
+    public long getNotificationCooldownSecondsPerSource() {
+        return notificationCooldownSecondsPerSource;
     }
 
     public CommandFilter getCommandFilter() {
