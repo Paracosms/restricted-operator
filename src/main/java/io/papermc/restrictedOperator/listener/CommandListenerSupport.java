@@ -289,12 +289,12 @@ final class CommandListenerSupport {
     }
 
     private Component createClickablePlayerComponent(Player player, String playerText) {
-        if (player == null || player.getWorld() == null) {
+        if (player == null) {
             return Component.text(playerText);
         }
 
         String worldKey = player.getWorld().getKey().toString();
-        String tpCommand = "/execute in " + worldKey + " run tp @p " + player.getName();
+        String tpCommand = "/execute in " + worldKey + " run tp @s " + player.getName();
         return Component.text(playerText)
                 .color(NamedTextColor.GRAY)
                 .decorate(TextDecoration.UNDERLINED)

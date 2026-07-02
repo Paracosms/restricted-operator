@@ -43,7 +43,7 @@ public final class RestrictedOperatorPlugin extends JavaPlugin {
             );
             event.registrar().register(
                     PermissionCommand.createBypass(configManager).build(),
-                    "Add or remove the restrictedoperator.bypass-users permission for an online player."
+                    "Add or remove the restrictedoperator.bypass-usernames permission for an online player."
             );
             event.registrar().register(
                     PermissionCommand.createNotify(configManager).build(),

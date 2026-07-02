@@ -10,11 +10,13 @@ import java.util.Set;
 public final class CommandFilter {
     private final Set<String> blockedRoots;
     private final Set<String> blockedSelectors;
+    private final Set<String> blockedNamespaces;
     private final boolean normalizeRootsLowercase;
 
-    public CommandFilter(Set<String> blockedRoots, Set<String> blockedSelectors, boolean normalizeRootsLowercase) {
+    public CommandFilter(Set<String> blockedRoots, Set<String> blockedSelectors, Set<String> blockedNamespaces, boolean normalizeRootsLowercase) {
         this.blockedRoots = blockedRoots;
         this.blockedSelectors = blockedSelectors;
+        this.blockedNamespaces = blockedNamespaces;
         this.normalizeRootsLowercase = normalizeRootsLowercase;
     }
 
@@ -38,10 +40,21 @@ public final class CommandFilter {
         String rawRoot = tokens[0];
         String normalizedRoot = normalizeRootsLowercase ? rawRoot.toLowerCase(Locale.ROOT) : rawRoot;
 
+        // Block all commands starting with blocked-namespaces in config.yml
+        if (normalizedRoot.contains(":")) {
+            String[] parts = normalizedRoot.split(":", 2);
+            String namespace = parts[0];
+            if (blockedNamespaces.contains(namespace)) {
+                return CommandCheckResult.blockedNamespace(normalizedRoot, namespace);
+            }
+        }
+
         // Block all commands starting with blocked-roots in config.yml
         if (blockedRoots.contains(normalizedRoot)) {
             return CommandCheckResult.blockedRoot(normalizedRoot, normalizedRoot);
         }
+
+
 
         // Tokenize to block selectors like @e
         for (int i = 1; i < tokens.length; i++) {

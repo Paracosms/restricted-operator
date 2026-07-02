@@ -13,8 +13,8 @@ class CommandFilterTest {
     private final CommandFilter filter = new CommandFilter(
             Set.of("kill", "minecraft:kill", "paper", "bukkit:reload"),
             Set.of("@e", "@a", "@r"),
-            true
-    );
+            Set.of("spigot"),
+            true);
 
     @Test
     void blocksExactRoot() {

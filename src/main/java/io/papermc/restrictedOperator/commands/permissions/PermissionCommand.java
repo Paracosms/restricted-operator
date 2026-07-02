@@ -24,7 +24,7 @@ public final class PermissionCommand {
         return create(
                 configManager,
                 "bypass",
-                "restrictedoperator.bypass-users",
+                "restrictedoperator.bypass-usernames",
                 configManager::addBypassUsername,
                 configManager::removeBypassUsername
         );

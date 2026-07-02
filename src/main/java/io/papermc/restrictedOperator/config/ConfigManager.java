@@ -3,8 +3,6 @@
 package io.papermc.restrictedOperator.config;
 
 import io.papermc.restrictedOperator.filter.CommandFilter;
-import net.kyori.adventure.text.Component;
-import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -58,7 +56,7 @@ public final class ConfigManager {
         );
         blockedCommandBlockNearbyMessage = config.getString(
                 "messages.blocked-command-block-nearby",
-                config.getString("messages.blocked-command-block-nearby", "A command block command was blocked.")
+                "A command block command was blocked."
         );
         blockedCommandBlockEditorMessage = config.getString(
                 "messages.blocked-command-block-editor",
@@ -80,8 +78,10 @@ public final class ConfigManager {
         boolean normalizeRootsLowercase = config.getBoolean("filter.normalize-roots-lowercase", true);
         Set<String> blockedRoots = normalizeList(config.getStringList("blocked-roots"));
         Set<String> blockedSelectors = normalizeList(config.getStringList("blocked-selectors"));
-        commandFilter = new CommandFilter(blockedRoots, blockedSelectors, normalizeRootsLowercase);
+        Set<String> blockedNamespaces = normalizeList(config.getStringList("blocked-namespaces"));
+        commandFilter = new CommandFilter(blockedRoots, blockedSelectors, blockedNamespaces, normalizeRootsLowercase);
 
+        // Custom warning messages for certain destructive/risky configs
         if (!blockedSelectors.contains("@e")) {
             plugin.getServer().getConsoleSender().sendMessage("WARNING: The current config will allow @e to be used by operators. Permitting the @e selector is considered highly risky.");
         }
@@ -90,93 +90,50 @@ public final class ConfigManager {
         }
     }
 
-    public boolean isPlayerChatCommandsFilterEnabled() {
-        return playerChatCommandsFilterEnabled;
-    }
+    // boilerplate spam !
+    public boolean isPlayerChatCommandsFilterEnabled() { return playerChatCommandsFilterEnabled; }
 
-    public boolean isCommandBlocksFilterEnabled() {
-        return commandBlocksFilterEnabled;
-    }
+    public boolean isCommandBlocksFilterEnabled() { return commandBlocksFilterEnabled; }
 
-    public boolean isCommandBlockMinecartsFilterEnabled() {
-        return commandBlockMinecartsFilterEnabled;
-    }
+    public boolean isCommandBlockMinecartsFilterEnabled() { return commandBlockMinecartsFilterEnabled; }
 
-    public boolean isConsoleCommandsFilterEnabled() {
-        return consoleCommandsFilterEnabled;
-    }
+    public boolean isConsoleCommandsFilterEnabled() { return consoleCommandsFilterEnabled; }
 
-    public String getBlockedPlayerCommandMessage() {
-        return blockedPlayerCommandMessage;
-    }
+    public String getBlockedPlayerCommandMessage() { return blockedPlayerCommandMessage; }
 
-    public String getBlockedCommandBlockNearbyMessage() {
-        return blockedCommandBlockNearbyMessage;
-    }
+    public String getBlockedCommandBlockNearbyMessage() { return blockedCommandBlockNearbyMessage; }
 
-    public String getBlockedCommandBlockEditorMessage() {
-        return blockedCommandBlockEditorMessage;
-    }
+    public String getBlockedCommandBlockEditorMessage() { return blockedCommandBlockEditorMessage; }
 
-    public String getBlockedInstructorNotifyMessage() {
-        return blockedInstructorNotifyMessage;
-    }
+    public String getBlockedInstructorNotifyMessage() { return blockedInstructorNotifyMessage; }
 
-    public boolean isBypassUsername(String username) {
-        return bypassUsernames.contains(username.toLowerCase(Locale.ROOT));
-    }
+    public boolean isBypassUsername(String username) { return bypassUsernames.contains(username.toLowerCase(Locale.ROOT)); }
 
-    public boolean isNotifyUsername(String username) {
-        return notifyUsernames.contains(username.toLowerCase(Locale.ROOT));
-    }
+    public boolean isNotifyUsername(String username) { return notifyUsernames.contains(username.toLowerCase(Locale.ROOT)); }
 
-    public boolean addBypassUsername(String username) {
-        return updateUsernameList("permissions.bypass-users", username, true);
-    }
+    public boolean addBypassUsername(String username) { return updateUsernameList("permissions.bypass-usernames", username, true); }
 
-    public boolean removeBypassUsername(String username) {
-        return updateUsernameList("permissions.bypass-users", username, false);
-    }
+    public boolean removeBypassUsername(String username) { return updateUsernameList("permissions.bypass-usernames", username, false); }
 
-    public boolean addNotifyUsername(String username) {
-        return updateUsernameList("permissions.notify", username, true);
-    }
+    public boolean addNotifyUsername(String username) { return updateUsernameList("permissions.notify", username, true); }
 
-    public boolean removeNotifyUsername(String username) {
-        return updateUsernameList("permissions.notify", username, false);
-    }
+    public boolean removeNotifyUsername(String username) { return updateUsernameList("permissions.notify", username, false); }
 
-    public boolean shouldLogBlockedCommands() {
-        return logBlockedCommands;
-    }
+    public boolean shouldLogBlockedCommands() { return logBlockedCommands; }
 
-    public boolean shouldNotifyInstructors() {
-        return notifyInstructors;
-    }
+    public boolean shouldNotifyInstructors() { return notifyInstructors; }
 
-    public boolean shouldNotifyNearbyPlayers() {
-        return notifyNearbyPlayers;
-    }
+    public boolean shouldNotifyNearbyPlayers() { return notifyNearbyPlayers; }
 
-    public int getNearbyRadiusBlocks() {
-        return nearbyRadiusBlocks;
-    }
+    public int getNearbyRadiusBlocks() { return nearbyRadiusBlocks; }
 
-    public boolean shouldNotifyLastKnownEditor() {
-        return notifyLastKnownEditor;
-    }
+    public boolean shouldNotifyLastKnownEditor() { return notifyLastKnownEditor; }
 
-    public long getNotificationCooldownSecondsPerSource() {
-        return notificationCooldownSecondsPerSource;
-    }
+    public long getNotificationCooldownSecondsPerSource() { return notificationCooldownSecondsPerSource; }
 
-    public long getTrackingPruneIntervalDays() {
-        return trackingPruneIntervalDays;
-    }
+    public long getTrackingPruneIntervalDays() { return trackingPruneIntervalDays; }
 
-    public CommandFilter getCommandFilter() {
-        return commandFilter;
-    }
+    public CommandFilter getCommandFilter() { return commandFilter; }
 
     private Set<String> normalizeList(List<String> values) {
         Set<String> normalized = new LinkedHashSet<>();

@@ -31,9 +31,12 @@ blocked-roots:
   - gamerule
   - plugins
   - pl
-  - minecraft:kill
-  - bukkit:reload
-  - paper:restart
+
+# Disables all commands starting with these namespaces (e.g. any command starting with "minecraft:" will be blocked).
+blocked-namespaces:
+  - minecraft
+  - bukkit
+  - spigot
   - paper
 
 blocked-selectors:
@@ -41,7 +44,7 @@ blocked-selectors:
   - "@a"
   - "@r"
 
-# Messages are compatible with Minecraft's chat color system (e.g. '&f' makes text white)
+# Messages are compatible with Minecraft's chat color system (e.g. '&f' makes text white).
 messages:
   blocked-player-command: "That command is disabled for camp safety. Ask an instructor if you need help."
   blocked-command-block-nearby: "A command block command near you was blocked for camp safety. Ask an instructor for help."

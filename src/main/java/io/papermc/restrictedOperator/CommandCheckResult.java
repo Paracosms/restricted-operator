@@ -22,10 +22,15 @@ public record CommandCheckResult(
         return new CommandCheckResult(false, Reason.BLOCKED_SELECTOR, root, matchedPattern);
     }
 
+    public static CommandCheckResult blockedNamespace(String root, String matchedPattern) {
+        return new CommandCheckResult(false, Reason.BLOCKED_NAMESPACE, root, matchedPattern);
+    }
+
     public enum Reason {
         ALLOWED,
         EMPTY_COMMAND,
         BLOCKED_ROOT,
-        BLOCKED_SELECTOR
+        BLOCKED_SELECTOR,
+        BLOCKED_NAMESPACE
     }
 }

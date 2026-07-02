@@ -6,7 +6,7 @@ authors: ["Paracosms"]
 description: Restricts unsafe commands and command blocks for operators.
 
 permissions:
-  restrictedoperator.bypass-users:
+  restrictedoperator.bypass-usernames:
     description: Bypass command safety filtering and trust command blocks.
     default: false
   restrictedoperator.notify:

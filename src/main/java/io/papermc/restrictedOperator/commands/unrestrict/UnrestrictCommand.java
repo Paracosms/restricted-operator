@@ -1,4 +1,4 @@
-// Adds the following bypass-users-only command:
+// Adds the following bypass-usernames-only command:
 // /unrestrict [x] [y] [z]
 // Unrestricts a command block at a given location for the current command
 // If the command changes, the command block becomes monitored again

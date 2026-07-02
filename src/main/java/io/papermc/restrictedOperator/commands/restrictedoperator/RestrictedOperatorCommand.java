@@ -1,4 +1,4 @@
-// Adds the following command for console and bypass-users:
+// Adds the following command for console and bypass-usernames:
 // /restrictedoperator reload
 // This command reloads the config file
 
