@@ -3,10 +3,13 @@
 package io.papermc.restrictedOperator.config;
 
 import io.papermc.restrictedOperator.filter.CommandFilter;
+import net.kyori.adventure.text.Component;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.LinkedHashSet;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -17,15 +20,20 @@ public final class ConfigManager {
     private boolean playerChatCommandsFilterEnabled;
     private boolean commandBlocksFilterEnabled;
     private boolean commandBlockMinecartsFilterEnabled;
+    private boolean consoleCommandsFilterEnabled;
     private Set<String> bypassUsernames;
+    private Set<String> notifyUsernames;
     private String blockedPlayerCommandMessage;
     private String blockedCommandBlockNearbyMessage;
+    private String blockedCommandBlockEditorMessage;
     private String blockedInstructorNotifyMessage;
     private boolean logBlockedCommands;
     private boolean notifyInstructors;
     private boolean notifyNearbyPlayers;
+    private boolean notifyLastKnownEditor;
     private int nearbyRadiusBlocks;
     private long notificationCooldownSecondsPerSource;
+    private long editorHintExpireMinutes;
     private CommandFilter commandFilter;
 
     public ConfigManager(JavaPlugin plugin) {
@@ -39,7 +47,12 @@ public final class ConfigManager {
         playerChatCommandsFilterEnabled = config.getBoolean("filter.player-chat-commands", true);
         commandBlocksFilterEnabled = config.getBoolean("filter.command-blocks", true);
         commandBlockMinecartsFilterEnabled = config.getBoolean("filter.command-block-minecarts", true);
-        bypassUsernames = normalizeList(config.getStringList("bypass-usernames"));
+        consoleCommandsFilterEnabled = config.getBoolean("filter.console", false);
+        bypassUsernames = normalizeTwoLists(
+                config.getStringList("permissions.bypass-users"),
+                config.getStringList("bypass-usernames")
+        );
+        notifyUsernames = normalizeList(config.getStringList("permissions.notify"));
         blockedPlayerCommandMessage = config.getString(
                 "messages.blocked-player-command",
                 "That command is disabled." // hardcoded fallback string
@@ -47,6 +60,10 @@ public final class ConfigManager {
         blockedCommandBlockNearbyMessage = config.getString(
                 "messages.blocked-command-block-nearby",
                 config.getString("messages.blocked-command-block", "A command block command was blocked.")
+        );
+        blockedCommandBlockEditorMessage = config.getString(
+                "messages.blocked-command-block-editor",
+                "A command block you placed or edited tried to run a disabled command."
         );
         blockedInstructorNotifyMessage = config.getString(
                 "messages.blocked-instructor-notify",
@@ -57,13 +74,22 @@ public final class ConfigManager {
                 ? config.getBoolean("notifications.notify-instructors", true)
                 : config.getBoolean("logging.notify-instructors", true);
         notifyNearbyPlayers = config.getBoolean("notifications.notify-nearby-players", true);
+        notifyLastKnownEditor = config.getBoolean("notifications.notify-last-known-editor", true);
         nearbyRadiusBlocks = config.getInt("notifications.nearby-radius-blocks", 16);
         notificationCooldownSecondsPerSource = config.getLong("notifications.cooldown-seconds-per-source", 10L);
+        editorHintExpireMinutes = config.getLong("attribution.editor-hint-expire-minutes", 120L);
 
         boolean normalizeRootsLowercase = config.getBoolean("filter.normalize-roots-lowercase", true);
         Set<String> blockedRoots = normalizeList(config.getStringList("blocked-roots"));
         Set<String> blockedSelectors = normalizeList(config.getStringList("blocked-selectors"));
         commandFilter = new CommandFilter(blockedRoots, blockedSelectors, normalizeRootsLowercase);
+
+        if (!blockedSelectors.contains("@e")) {
+            plugin.getServer().getConsoleSender().sendMessage("WARNING: The current config will allow @e to be used by operators. Permitting the @e selector is considered highly risky.");
+        }
+        if (consoleCommandsFilterEnabled) {
+            plugin.getServer().getConsoleSender().sendMessage("WARNING: The current config restricts console commands. Restricted commands sent through the console will not run.");
+        }
     }
 
     public boolean isPlayerChatCommandsFilterEnabled() {
@@ -78,6 +104,10 @@ public final class ConfigManager {
         return commandBlockMinecartsFilterEnabled;
     }
 
+    public boolean isConsoleCommandsFilterEnabled() {
+        return consoleCommandsFilterEnabled;
+    }
+
     public String getBlockedPlayerCommandMessage() {
         return blockedPlayerCommandMessage;
     }
@@ -86,12 +116,36 @@ public final class ConfigManager {
         return blockedCommandBlockNearbyMessage;
     }
 
+    public String getBlockedCommandBlockEditorMessage() {
+        return blockedCommandBlockEditorMessage;
+    }
+
     public String getBlockedInstructorNotifyMessage() {
         return blockedInstructorNotifyMessage;
     }
 
     public boolean isBypassUsername(String username) {
         return bypassUsernames.contains(username.toLowerCase(Locale.ROOT));
+    }
+
+    public boolean isNotifyUsername(String username) {
+        return notifyUsernames.contains(username.toLowerCase(Locale.ROOT));
+    }
+
+    public boolean addBypassUsername(String username) {
+        return updateUsernameList("permissions.bypass-users", username, true);
+    }
+
+    public boolean removeBypassUsername(String username) {
+        return updateUsernameList("permissions.bypass-users", username, false);
+    }
+
+    public boolean addNotifyUsername(String username) {
+        return updateUsernameList("permissions.notify", username, true);
+    }
+
+    public boolean removeNotifyUsername(String username) {
+        return updateUsernameList("permissions.notify", username, false);
     }
 
     public boolean shouldLogBlockedCommands() {
@@ -110,8 +164,16 @@ public final class ConfigManager {
         return nearbyRadiusBlocks;
     }
 
+    public boolean shouldNotifyLastKnownEditor() {
+        return notifyLastKnownEditor;
+    }
+
     public long getNotificationCooldownSecondsPerSource() {
         return notificationCooldownSecondsPerSource;
+    }
+
+    public long getEditorHintExpireMinutes() {
+        return editorHintExpireMinutes;
     }
 
     public CommandFilter getCommandFilter() {
@@ -127,5 +189,29 @@ public final class ConfigManager {
             }
         }
         return normalized;
+    }
+
+    private Set<String> normalizeTwoLists(List<String> first, List<String> second) {
+        Set<String> normalized = new LinkedHashSet<>();
+        normalized.addAll(normalizeList(first));
+        normalized.addAll(normalizeList(second));
+        return normalized;
+    }
+
+    private boolean updateUsernameList(String path, String username, boolean add) {
+        String normalizedUsername = username.trim().toLowerCase(Locale.ROOT);
+        if (normalizedUsername.isEmpty()) {
+            return false;
+        }
+
+        Set<String> usernames = normalizeList(plugin.getConfig().getStringList(path));
+        boolean changed = add ? usernames.add(normalizedUsername) : usernames.remove(normalizedUsername);
+        if (!changed) {
+            return false;
+        }
+
+        plugin.getConfig().set(path, new ArrayList<>(usernames));
+        plugin.saveConfig();
+        return true;
     }
 }

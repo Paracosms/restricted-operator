@@ -1,20 +1,14 @@
 name: RestrictedOperator
-version: 0.1.0
+version: 1.0.0
 main: io.papermc.restrictedOperator.RestrictedOperatorPlugin
 api-version: "1.21"
 authors: ["Paracosms"]
-description: Restricts unsafe direct player commands for camp safety.
+description: Restricts unsafe commands and command blocks for operators.
 
 permissions:
+  restrictedoperator.bypass-users:
+    description: Bypass command safety filtering and trust command blocks.
+    default: false
   restrictedoperator.notify:
     description: Receive blocked command notifications.
-    default: op
-  restrictedoperator.reload:
-    description: Reload RestrictedOperator config.
-    default: op
-  restrictedoperator.admin:
-    description: Full RestrictedOperator access.
-    default: op
-    children:
-      restrictedoperator.notify: true
-      restrictedoperator.reload: true
+    default: false

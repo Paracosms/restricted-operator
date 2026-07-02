@@ -6,6 +6,7 @@ import io.papermc.restrictedOperator.CommandCheckResult;
 import io.papermc.restrictedOperator.CommandSourceType;
 import io.papermc.restrictedOperator.PermissionNodes;
 import io.papermc.restrictedOperator.RestrictedOperatorPlugin;
+import io.papermc.restrictedOperator.commands.unrestrict.CommandBlockTrustService;
 import io.papermc.restrictedOperator.config.ConfigManager;
 import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.CommandSender;
@@ -22,8 +23,13 @@ import org.bukkit.event.server.ServerCommandEvent;
 public final class CommandListener implements Listener {
     private final CommandListenerSupport support;
 
-    public CommandListener(RestrictedOperatorPlugin plugin, ConfigManager configManager) {
-        this.support = new CommandListenerSupport(plugin, configManager);
+    public CommandListener(
+            RestrictedOperatorPlugin plugin,
+            ConfigManager configManager,
+            CommandBlockTrustService trustService,
+            CommandBlockAttributionService attributionService
+    ) {
+        this.support = new CommandListenerSupport(plugin, configManager, trustService, attributionService);
     }
 
     // Restricts chat commands
@@ -34,7 +40,7 @@ public final class CommandListener implements Listener {
         }
 
         Player player = event.getPlayer();
-        if (support.isBypassUsername(player.getName())) {
+        if (player.hasPermission(PermissionNodes.BYPASS_USERS) || support.isBypassUsername(player.getName())) {
             return;
         }
 
@@ -53,12 +59,36 @@ public final class CommandListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onCommandPreprocess(ServerCommandEvent event) {
         CommandSender sender = event.getSender();
+
+        // Restricts console commands
         if (sender instanceof ConsoleCommandSender  || sender instanceof RemoteConsoleCommandSender) {
+            if (!support.isConsoleCommandsFilterEnabled()) {
+                return;
+            }
+            CommandCheckResult result = support.getCommandFilter().check(event.getCommand(), CommandSourceType.CONSOLE);
+            if (result.allowed()) {
+                return;
+            }
+
+            event.setCancelled(true);
+            support.notifyBlockedCommandSource(
+                    "console",
+                    "console",
+                    null,
+                    event.getCommand(),
+                    result,
+                    null
+            );
             return;
         }
 
+        // Restricts command block commands
         if (sender instanceof BlockCommandSender) {
             if (!support.isCommandBlocksFilterEnabled()) {
+                return;
+            }
+
+            if (support.isTrustedCommandBlock((BlockCommandSender) sender)) {
                 return;
             }
 
@@ -67,19 +97,20 @@ public final class CommandListener implements Listener {
                 return;
             }
 
-            // Check if /unrestrict command has been used [IMPLEMENT LATER, DO NOT IMPLEMENT IF NOT EXPLICITLY TOLD TO DO SO]
-
             event.setCancelled(true);
+            BlockCommandSender blockSender = (BlockCommandSender) sender;
             support.notifyBlockedCommandSource(
-                    support.createBlockSourceKey(((BlockCommandSender) sender).getBlock().getLocation()),
+                    support.createBlockSourceKey(blockSender.getBlock().getLocation()),
                     "command block",
-                    ((BlockCommandSender) sender).getBlock().getLocation(),
+                    blockSender.getBlock().getLocation(),
                     event.getCommand(),
-                    result
+                    result,
+                    support.findLastKnownEditor(blockSender.getBlock().getLocation())
             );
             return;
         }
 
+        // Restricts command block minecart commands
         if (sender instanceof CommandMinecart) {
             if (!support.isCommandBlockMinecartsFilterEnabled()) {
                 return;
@@ -96,7 +127,8 @@ public final class CommandListener implements Listener {
                     "command block minecart",
                     ((CommandMinecart) sender).getLocation(),
                     event.getCommand(),
-                    result
+                    result,
+                    null
             );
         }
     }

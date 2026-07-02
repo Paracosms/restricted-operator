@@ -1,9 +1,9 @@
 package io.papermc.restrictedOperator.listener;
 
 import io.papermc.restrictedOperator.CommandCheckResult;
-import io.papermc.restrictedOperator.CommandSourceType;
 import io.papermc.restrictedOperator.PermissionNodes;
 import io.papermc.restrictedOperator.RestrictedOperatorPlugin;
+import io.papermc.restrictedOperator.commands.unrestrict.CommandBlockTrustService;
 import io.papermc.restrictedOperator.config.ConfigManager;
 import io.papermc.restrictedOperator.filter.CommandFilter;
 import net.kyori.adventure.text.Component;
@@ -11,23 +11,35 @@ import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.minecart.CommandMinecart;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 final class CommandListenerSupport {
+    private static final LegacyComponentSerializer LEGACY_AMPERSAND = LegacyComponentSerializer.legacyAmpersand();
+
     private final RestrictedOperatorPlugin plugin;
     private final ConfigManager configManager;
+    private final CommandBlockTrustService trustService;
+    private final CommandBlockAttributionService attributionService;
     private final Map<String, Long> lastNotificationMillisBySource = new HashMap<>();
 
-    CommandListenerSupport(RestrictedOperatorPlugin plugin, ConfigManager configManager) {
+    CommandListenerSupport(
+            RestrictedOperatorPlugin plugin,
+            ConfigManager configManager,
+            CommandBlockTrustService trustService,
+            CommandBlockAttributionService attributionService
+    ) {
         this.plugin = plugin;
         this.configManager = configManager;
+        this.trustService = trustService;
+        this.attributionService = attributionService;
     }
 
     CommandFilter getCommandFilter() {
@@ -54,12 +66,38 @@ final class CommandListenerSupport {
         return configManager.shouldNotifyInstructors();
     }
 
+    boolean isNotifyUsername(String username) {
+        return configManager.isNotifyUsername(username);
+    }
+
     boolean isCommandBlocksFilterEnabled() {
         return configManager.isCommandBlocksFilterEnabled();
     }
 
     boolean isCommandBlockMinecartsFilterEnabled() {
         return configManager.isCommandBlockMinecartsFilterEnabled();
+    }
+
+    boolean isConsoleCommandsFilterEnabled() {
+        return configManager.isConsoleCommandsFilterEnabled();
+    }
+
+    boolean isTrustedCommandBlock(BlockCommandSender sender) {
+        return trustService.isTrusted(sender);
+    }
+
+    Player findLastKnownEditor(Location location) {
+        if (!configManager.shouldNotifyLastKnownEditor()) {
+            return null;
+        }
+
+        long maxAgeMillis = configManager.getEditorHintExpireMinutes() * 60_000L;
+        UUID trackedEditorId = attributionService.findTrackedEditorId(location, maxAgeMillis);
+        if (trackedEditorId == null) {
+            return null;
+        }
+
+        return plugin.getServer().getPlayer(trackedEditorId);
     }
 
     void notifyBlockedPlayerCommand(Player player, String command, CommandCheckResult result) {
@@ -74,11 +112,15 @@ final class CommandListenerSupport {
         }
 
         if (shouldNotifyInstructors()) {
-            String notifyMessage = ChatColor.YELLOW + "[RestrictedOperator] " + ChatColor.WHITE
-                    + "Blocked " + player.getName() + ": " + result.reason() + "; command="
-                    + ChatColor.GRAY + command;
+            Component notifyMessage = Component.text()
+                    .append(Component.text("[RestrictedOperator] ", NamedTextColor.YELLOW))
+                    .append(Component.text("Blocked ", NamedTextColor.WHITE))
+                    .append(Component.text(player.getName(), NamedTextColor.WHITE))
+                    .append(Component.text(": " + result.reason() + "; command=", NamedTextColor.WHITE))
+                    .append(Component.text(command, NamedTextColor.GRAY))
+                    .build();
             for (Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
-                if (onlinePlayer.hasPermission(PermissionNodes.NOTIFY)) {
+                if (onlinePlayer.hasPermission(PermissionNodes.NOTIFY) || isNotifyUsername(onlinePlayer.getName())) {
                     onlinePlayer.sendMessage(notifyMessage);
                 }
             }
@@ -86,14 +128,20 @@ final class CommandListenerSupport {
         }
     }
 
-    void notifyBlockedCommandSource(String sourceKey, String sourceType, Location location, String command, CommandCheckResult result) {
+    void notifyBlockedCommandSource(
+            String sourceKey,
+            String sourceType,
+            Location location,
+            String command,
+            CommandCheckResult result,
+            Player lastKnownEditor
+    ) {
         if (isOnCooldown(sourceKey)) {
             return;
         }
 
         String locationText = formatLocation(location);
         String rawCommand = command == null ? "" : command;
-        String instructorMessage = formatBlockedInstructorNotifyMessage(sourceType, locationText, rawCommand, result);
 
         if (shouldLogBlockedCommands()) {
             plugin.getLogger().info(String.format(
@@ -109,23 +157,30 @@ final class CommandListenerSupport {
         if (shouldNotifyInstructors()) {
             Component instructorMessageComponent = formatBlockedInstructorNotifyComponent(sourceType, location, rawCommand, result);
             for (Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
-                if (onlinePlayer.hasPermission(PermissionNodes.NOTIFY)) {
+                if (onlinePlayer.hasPermission(PermissionNodes.NOTIFY) || isNotifyUsername(onlinePlayer.getName())) {
                     onlinePlayer.sendMessage(instructorMessageComponent);
                 }
             }
-            sendConsoleNotification(plugin.getServer().getConsoleSender(), instructorMessage);
+            sendConsoleNotification(plugin.getServer().getConsoleSender(), instructorMessageComponent);
         }
 
         if (configManager.shouldNotifyNearbyPlayers() && location != null && location.getWorld() != null) {
-            String nearbyMessage = ChatColor.translateAlternateColorCodes('&', configManager.getBlockedCommandBlockNearbyMessage());
+            Component nearbyMessage = deserializeLegacy(configManager.getBlockedCommandBlockNearbyMessage());
             for (Player nearbyPlayer : location.getWorld().getNearbyPlayers(
                     location,
                     configManager.getNearbyRadiusBlocks(),
                     configManager.getNearbyRadiusBlocks(),
                     configManager.getNearbyRadiusBlocks()
             )) {
+                if (lastKnownEditor != null && nearbyPlayer.getUniqueId().equals(lastKnownEditor.getUniqueId())) {
+                    continue;
+                }
                 nearbyPlayer.sendMessage(nearbyMessage);
             }
+        }
+
+        if (lastKnownEditor != null) {
+            lastKnownEditor.sendMessage(deserializeLegacy(configManager.getBlockedCommandBlockEditorMessage()));
         }
     }
 
@@ -170,15 +225,6 @@ final class CommandListenerSupport {
         return "x: " + location.getBlockX() + " y: " + location.getBlockY() + " z: " + location.getBlockZ();
     }
 
-    private String formatBlockedInstructorNotifyMessage(String sourceType, String locationText, String command, CommandCheckResult result) {
-        String message = configManager.getBlockedInstructorNotifyMessage()
-                .replace("{source}", sourceType)
-                .replace("{location}", locationText)
-                .replace("{reason}", String.valueOf(result.reason()))
-                .replace("{command}", command);
-        return ChatColor.translateAlternateColorCodes('&', message);
-    }
-
     private Component formatBlockedInstructorNotifyComponent(String sourceType, Location location, String command, CommandCheckResult result) {
         String locationText = formatLocation(location);
         String message = configManager.getBlockedInstructorNotifyMessage()
@@ -188,18 +234,16 @@ final class CommandListenerSupport {
 
         int locationPlaceholderIndex = message.indexOf("{location}");
         if (locationPlaceholderIndex < 0) {
-            return LegacyComponentSerializer.legacyAmpersand().deserialize(
-                    message.replace("{location}", locationText)
-            );
+            return deserializeLegacy(message.replace("{location}", locationText));
         }
 
         String beforeLocation = message.substring(0, locationPlaceholderIndex);
         String afterLocation = message.substring(locationPlaceholderIndex + "{location}".length());
         Component clickableLocation = createClickableLocationComponent(location, locationText);
 
-        return LegacyComponentSerializer.legacyAmpersand().deserialize(beforeLocation)
+        return deserializeLegacy(beforeLocation)
                 .append(clickableLocation)
-                .append(LegacyComponentSerializer.legacyAmpersand().deserialize(afterLocation));
+                .append(deserializeLegacy(afterLocation));
     }
 
     private Component createClickableLocationComponent(Location location, String locationText) {
@@ -215,7 +259,11 @@ final class CommandListenerSupport {
                 .clickEvent(ClickEvent.suggestCommand(tpCommand));
     }
 
-    private void sendConsoleNotification(CommandSender console, String message) {
+    private void sendConsoleNotification(CommandSender console, Component message) {
         console.sendMessage(message);
+    }
+
+    private Component deserializeLegacy(String message) {
+        return LEGACY_AMPERSAND.deserialize(message);
     }
 }

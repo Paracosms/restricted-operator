@@ -1,7 +1,6 @@
-package io.papermc.restrictedOperator.filter;
+package io.papermc.restrictedOperator;
 
-import io.papermc.restrictedOperator.CommandCheckResult;
-import io.papermc.restrictedOperator.CommandSourceType;
+import io.papermc.restrictedOperator.filter.CommandFilter;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;

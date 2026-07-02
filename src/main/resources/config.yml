@@ -3,10 +3,11 @@ filter:
   command-blocks: true
   command-block-minecarts: true
   console: false
-  other-non-player-senders: true
   normalize-roots-lowercase: true
 
-bypass-usernames: []
+permissions:
+  bypass-users: []
+  notify: []
 
 blocked-roots:
   - stop
@@ -40,6 +41,7 @@ blocked-selectors:
   - "@a"
   - "@r"
 
+# Messages are compatible with Minecraft's chat color system (e.g. '&f' makes text white)
 messages:
   blocked-player-command: "That command is disabled for camp safety. Ask an instructor if you need help."
   blocked-command-block-nearby: "A command block command near you was blocked for camp safety. Ask an instructor for help."
@@ -48,9 +50,13 @@ messages:
 
 notifications:
   notify-instructors: true
-  notify-nearby-players: true
-  nearby-radius-blocks: 16
+  notify-nearby-players: false
+  notify-last-known-editor: true
+  nearby-radius-blocks: 64
   cooldown-seconds-per-source: 10
+
+attribution:
+  editor-hint-expire-minutes: 120
 
 logging:
   log-blocked-commands: true
