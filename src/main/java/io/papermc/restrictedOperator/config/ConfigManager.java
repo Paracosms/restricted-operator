@@ -33,7 +33,7 @@ public final class ConfigManager {
     private boolean notifyLastKnownEditor;
     private int nearbyRadiusBlocks;
     private long notificationCooldownSecondsPerSource;
-    private long editorHintExpireMinutes;
+    private long trackingPruneIntervalDays;
     private CommandFilter commandFilter;
 
     public ConfigManager(JavaPlugin plugin) {
@@ -48,18 +48,17 @@ public final class ConfigManager {
         commandBlocksFilterEnabled = config.getBoolean("filter.command-blocks", true);
         commandBlockMinecartsFilterEnabled = config.getBoolean("filter.command-block-minecarts", true);
         consoleCommandsFilterEnabled = config.getBoolean("filter.console", false);
-        bypassUsernames = normalizeTwoLists(
-                config.getStringList("permissions.bypass-users"),
-                config.getStringList("bypass-usernames")
-        );
+        bypassUsernames = normalizeList(config.getStringList("permissions.bypass-usernames"));
         notifyUsernames = normalizeList(config.getStringList("permissions.notify"));
+
+        // hardcoded fallback strings if undefined
         blockedPlayerCommandMessage = config.getString(
                 "messages.blocked-player-command",
-                "That command is disabled." // hardcoded fallback string
+                "That command is disabled."
         );
         blockedCommandBlockNearbyMessage = config.getString(
                 "messages.blocked-command-block-nearby",
-                config.getString("messages.blocked-command-block", "A command block command was blocked.")
+                config.getString("messages.blocked-command-block-nearby", "A command block command was blocked.")
         );
         blockedCommandBlockEditorMessage = config.getString(
                 "messages.blocked-command-block-editor",
@@ -67,17 +66,16 @@ public final class ConfigManager {
         );
         blockedInstructorNotifyMessage = config.getString(
                 "messages.blocked-instructor-notify",
-                "&e[RestrictedOperator]&f Blocked {source} at {location}. reason=[{reason}] command=&7{command}"
+                "&e[RestrictedOperator]&f Blocked {source} at {location}: Last modified by {player} reason=[{reason}]; command=&7{command}"
         );
+
         logBlockedCommands = config.getBoolean("logging.log-blocked-commands", true);
-        notifyInstructors = config.contains("notifications.notify-instructors")
-                ? config.getBoolean("notifications.notify-instructors", true)
-                : config.getBoolean("logging.notify-instructors", true);
+        notifyInstructors = config.getBoolean("notifications.notify-instructors", true);
         notifyNearbyPlayers = config.getBoolean("notifications.notify-nearby-players", true);
         notifyLastKnownEditor = config.getBoolean("notifications.notify-last-known-editor", true);
         nearbyRadiusBlocks = config.getInt("notifications.nearby-radius-blocks", 16);
         notificationCooldownSecondsPerSource = config.getLong("notifications.cooldown-seconds-per-source", 10L);
-        editorHintExpireMinutes = config.getLong("attribution.editor-hint-expire-minutes", 120L);
+        trackingPruneIntervalDays = config.getLong("attribution.tracking-prune-interval-days", 7L);
 
         boolean normalizeRootsLowercase = config.getBoolean("filter.normalize-roots-lowercase", true);
         Set<String> blockedRoots = normalizeList(config.getStringList("blocked-roots"));
@@ -172,8 +170,8 @@ public final class ConfigManager {
         return notificationCooldownSecondsPerSource;
     }
 
-    public long getEditorHintExpireMinutes() {
-        return editorHintExpireMinutes;
+    public long getTrackingPruneIntervalDays() {
+        return trackingPruneIntervalDays;
     }
 
     public CommandFilter getCommandFilter() {
@@ -188,13 +186,6 @@ public final class ConfigManager {
                 normalized.add(trimmed.toLowerCase(Locale.ROOT));
             }
         }
-        return normalized;
-    }
-
-    private Set<String> normalizeTwoLists(List<String> first, List<String> second) {
-        Set<String> normalized = new LinkedHashSet<>();
-        normalized.addAll(normalizeList(first));
-        normalized.addAll(normalizeList(second));
         return normalized;
     }
 

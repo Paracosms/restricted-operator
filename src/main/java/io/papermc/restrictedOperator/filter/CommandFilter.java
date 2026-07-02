@@ -3,7 +3,6 @@
 package io.papermc.restrictedOperator.filter;
 
 import io.papermc.restrictedOperator.CommandCheckResult;
-import io.papermc.restrictedOperator.CommandSourceType;
 
 import java.util.Locale;
 import java.util.Set;
@@ -20,7 +19,7 @@ public final class CommandFilter {
     }
 
     // Parses commands
-    public CommandCheckResult check(String rawCommand, CommandSourceType sourceType) {
+    public CommandCheckResult check(String rawCommand) {
         if (rawCommand == null) {
             return CommandCheckResult.emptyCommand();
         }

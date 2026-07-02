@@ -18,7 +18,7 @@ class CommandFilterTest {
 
     @Test
     void blocksExactRoot() {
-        CommandCheckResult result = filter.check("/kill @s", CommandSourceType.PLAYER);
+        CommandCheckResult result = filter.check("/kill @s");
 
         assertFalse(result.allowed());
         assertEquals(CommandCheckResult.Reason.BLOCKED_ROOT, result.reason());
@@ -27,7 +27,7 @@ class CommandFilterTest {
 
     @Test
     void blocksNamespacedRoot() {
-        CommandCheckResult result = filter.check("/Minecraft:Kill @s", CommandSourceType.PLAYER);
+        CommandCheckResult result = filter.check("/Minecraft:Kill @s");
 
         assertFalse(result.allowed());
         assertEquals(CommandCheckResult.Reason.BLOCKED_ROOT, result.reason());
@@ -36,7 +36,7 @@ class CommandFilterTest {
 
     @Test
     void blocksSelectorToken() {
-        CommandCheckResult result = filter.check("/tp @e[type=pig] ~ ~ ~", CommandSourceType.PLAYER);
+        CommandCheckResult result = filter.check("/tp @e[type=pig] ~ ~ ~");
 
         assertFalse(result.allowed());
         assertEquals(CommandCheckResult.Reason.BLOCKED_SELECTOR, result.reason());
@@ -45,7 +45,7 @@ class CommandFilterTest {
 
     @Test
     void allowsSafeSelector() {
-        CommandCheckResult result = filter.check("/tp @p ~ ~1 ~", CommandSourceType.PLAYER);
+        CommandCheckResult result = filter.check("/tp @p ~ ~1 ~");
 
         assertTrue(result.allowed());
         assertEquals(CommandCheckResult.Reason.ALLOWED, result.reason());
@@ -53,14 +53,14 @@ class CommandFilterTest {
 
     @Test
     void avoidsSubstringFalsePositives() {
-        assertTrue(filter.check("/killjoy", CommandSourceType.PLAYER).allowed());
-        assertTrue(filter.check("/say hello@e", CommandSourceType.PLAYER).allowed());
-        assertTrue(filter.check("/say @everyone", CommandSourceType.PLAYER).allowed());
+        assertTrue(filter.check("/killjoy").allowed());
+        assertTrue(filter.check("/say hello@e").allowed());
+        assertTrue(filter.check("/say @everyone").allowed());
     }
 
     @Test
     void allowsSafeCommandBlockCommand() {
-        CommandCheckResult result = filter.check("say hello", CommandSourceType.COMMAND_BLOCK);
+        CommandCheckResult result = filter.check("say hello");
 
         assertTrue(result.allowed());
         assertEquals(CommandCheckResult.Reason.ALLOWED, result.reason());
@@ -69,7 +69,7 @@ class CommandFilterTest {
 
     @Test
     void blocksCommandBlockKillCommand() {
-        CommandCheckResult result = filter.check("kill @p", CommandSourceType.COMMAND_BLOCK);
+        CommandCheckResult result = filter.check("kill @p");
 
         assertFalse(result.allowed());
         assertEquals(CommandCheckResult.Reason.BLOCKED_ROOT, result.reason());
@@ -78,7 +78,7 @@ class CommandFilterTest {
 
     @Test
     void blocksNamespacedCommandBlockKillCommand() {
-        CommandCheckResult result = filter.check("minecraft:kill @p", CommandSourceType.COMMAND_BLOCK);
+        CommandCheckResult result = filter.check("minecraft:kill @p");
 
         assertFalse(result.allowed());
         assertEquals(CommandCheckResult.Reason.BLOCKED_ROOT, result.reason());
@@ -87,7 +87,7 @@ class CommandFilterTest {
 
     @Test
     void blocksRepeatingCommandBlockSelectorCommand() {
-        CommandCheckResult result = filter.check("tp @e ~ ~1 ~", CommandSourceType.COMMAND_BLOCK);
+        CommandCheckResult result = filter.check("tp @e ~ ~1 ~");
 
         assertFalse(result.allowed());
         assertEquals(CommandCheckResult.Reason.BLOCKED_SELECTOR, result.reason());

@@ -25,7 +25,7 @@ public final class RestrictedOperatorPlugin extends JavaPlugin {
         configManager = new ConfigManager(this);
         configManager.reload();
         commandBlockTrustService = new CommandBlockTrustService(this);
-        commandBlockAttributionService = new CommandBlockAttributionService();
+        commandBlockAttributionService = new CommandBlockAttributionService(configManager::getTrackingPruneIntervalDays);
 
         Bukkit.getPluginManager().registerEvents(
                 new CommandListener(this, configManager, commandBlockTrustService, commandBlockAttributionService),

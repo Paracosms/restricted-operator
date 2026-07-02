@@ -3,7 +3,6 @@
 package io.papermc.restrictedOperator.listener;
 
 import io.papermc.restrictedOperator.CommandCheckResult;
-import io.papermc.restrictedOperator.CommandSourceType;
 import io.papermc.restrictedOperator.PermissionNodes;
 import io.papermc.restrictedOperator.RestrictedOperatorPlugin;
 import io.papermc.restrictedOperator.commands.unrestrict.CommandBlockTrustService;
@@ -44,7 +43,7 @@ public final class CommandListener implements Listener {
             return;
         }
 
-        CommandCheckResult result = support.getCommandFilter().check(event.getMessage(), CommandSourceType.PLAYER);
+        CommandCheckResult result = support.getCommandFilter().check(event.getMessage());
         if (result.allowed()) {
             return;
         }
@@ -65,7 +64,7 @@ public final class CommandListener implements Listener {
             if (!support.isConsoleCommandsFilterEnabled()) {
                 return;
             }
-            CommandCheckResult result = support.getCommandFilter().check(event.getCommand(), CommandSourceType.CONSOLE);
+            CommandCheckResult result = support.getCommandFilter().check(event.getCommand());
             if (result.allowed()) {
                 return;
             }
@@ -92,7 +91,7 @@ public final class CommandListener implements Listener {
                 return;
             }
 
-            CommandCheckResult result = support.getCommandFilter().check(event.getCommand(), CommandSourceType.COMMAND_BLOCK);
+            CommandCheckResult result = support.getCommandFilter().check(event.getCommand());
             if (result.allowed()) {
                 return;
             }
@@ -116,7 +115,7 @@ public final class CommandListener implements Listener {
                 return;
             }
 
-            CommandCheckResult result = support.getCommandFilter().check(event.getCommand(), CommandSourceType.COMMAND_BLOCK_MINECART);
+            CommandCheckResult result = support.getCommandFilter().check(event.getCommand());
             if (result.allowed()) {
                 return;
             }

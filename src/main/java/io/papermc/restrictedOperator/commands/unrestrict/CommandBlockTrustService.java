@@ -50,6 +50,7 @@ public final class CommandBlockTrustService {
         }
 
         data.remove(unrestrictedCommand);
+        data.remove(unrestrictedLocation);
         commandBlock.update();
         return false;
     }

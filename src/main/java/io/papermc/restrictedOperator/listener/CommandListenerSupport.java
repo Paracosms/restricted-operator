@@ -91,8 +91,7 @@ final class CommandListenerSupport {
             return null;
         }
 
-        long maxAgeMillis = configManager.getEditorHintExpireMinutes() * 60_000L;
-        UUID trackedEditorId = attributionService.findTrackedEditorId(location, maxAgeMillis);
+        UUID trackedEditorId = attributionService.findTrackedEditorId(location);
         if (trackedEditorId == null) {
             return null;
         }
@@ -155,7 +154,7 @@ final class CommandListenerSupport {
         }
 
         if (shouldNotifyInstructors()) {
-            Component instructorMessageComponent = formatBlockedInstructorNotifyComponent(sourceType, location, rawCommand, result);
+            Component instructorMessageComponent = formatBlockedInstructorNotifyComponent(sourceType, location, rawCommand, result, lastKnownEditor);
             for (Player onlinePlayer : plugin.getServer().getOnlinePlayers()) {
                 if (onlinePlayer.hasPermission(PermissionNodes.NOTIFY) || isNotifyUsername(onlinePlayer.getName())) {
                     onlinePlayer.sendMessage(instructorMessageComponent);
@@ -225,25 +224,55 @@ final class CommandListenerSupport {
         return "x: " + location.getBlockX() + " y: " + location.getBlockY() + " z: " + location.getBlockZ();
     }
 
-    private Component formatBlockedInstructorNotifyComponent(String sourceType, Location location, String command, CommandCheckResult result) {
+    private Component formatBlockedInstructorNotifyComponent(
+            String sourceType,
+            Location location,
+            String command,
+            CommandCheckResult result,
+            Player lastKnownEditor
+    ) {
         String locationText = formatLocation(location);
+        String playerText = lastKnownEditor == null ? "unknown player" : lastKnownEditor.getName();
         String message = configManager.getBlockedInstructorNotifyMessage()
                 .replace("{source}", sourceType)
                 .replace("{reason}", String.valueOf(result.reason()))
-                .replace("{command}", command);
+                .replace("{command}", command)
+                .replace("{location}", "__LOCATION__")
+                .replace("{player}", "__PLAYER__");
 
-        int locationPlaceholderIndex = message.indexOf("{location}");
-        if (locationPlaceholderIndex < 0) {
-            return deserializeLegacy(message.replace("{location}", locationText));
+        Component messageComponent = Component.empty();
+        int cursor = 0;
+        while (cursor < message.length()) {
+            int nextLocation = message.indexOf("__LOCATION__", cursor);
+            int nextPlayer = message.indexOf("__PLAYER__", cursor);
+            int nextPlaceholderIndex;
+            String nextPlaceholder;
+
+            if (nextLocation >= 0 && (nextPlayer < 0 || nextLocation < nextPlayer)) {
+                nextPlaceholderIndex = nextLocation;
+                nextPlaceholder = "__LOCATION__";
+            } else if (nextPlayer >= 0) {
+                nextPlaceholderIndex = nextPlayer;
+                nextPlaceholder = "__PLAYER__";
+            } else {
+                messageComponent = messageComponent.append(deserializeLegacy(message.substring(cursor)));
+                break;
+            }
+
+            if (nextPlaceholderIndex > cursor) {
+                messageComponent = messageComponent.append(deserializeLegacy(message.substring(cursor, nextPlaceholderIndex)));
+            }
+
+            if ("__LOCATION__".equals(nextPlaceholder)) {
+                messageComponent = messageComponent.append(createClickableLocationComponent(location, locationText));
+            } else {
+                messageComponent = messageComponent.append(createClickablePlayerComponent(lastKnownEditor, playerText));
+            }
+
+            cursor = nextPlaceholderIndex + nextPlaceholder.length();
         }
 
-        String beforeLocation = message.substring(0, locationPlaceholderIndex);
-        String afterLocation = message.substring(locationPlaceholderIndex + "{location}".length());
-        Component clickableLocation = createClickableLocationComponent(location, locationText);
-
-        return deserializeLegacy(beforeLocation)
-                .append(clickableLocation)
-                .append(deserializeLegacy(afterLocation));
+        return messageComponent;
     }
 
     private Component createClickableLocationComponent(Location location, String locationText) {
@@ -254,6 +283,19 @@ final class CommandListenerSupport {
         String worldKey = location.getWorld().getKey().toString();
         String tpCommand = "/execute in " + worldKey + " run tp @s " + location.getBlockX() + " " + location.getBlockY() + " " + location.getBlockZ();
         return Component.text(locationText)
+                .color(NamedTextColor.GRAY)
+                .decorate(TextDecoration.UNDERLINED)
+                .clickEvent(ClickEvent.suggestCommand(tpCommand));
+    }
+
+    private Component createClickablePlayerComponent(Player player, String playerText) {
+        if (player == null || player.getWorld() == null) {
+            return Component.text(playerText);
+        }
+
+        String worldKey = player.getWorld().getKey().toString();
+        String tpCommand = "/execute in " + worldKey + " run tp @p " + player.getName();
+        return Component.text(playerText)
                 .color(NamedTextColor.GRAY)
                 .decorate(TextDecoration.UNDERLINED)
                 .clickEvent(ClickEvent.suggestCommand(tpCommand));

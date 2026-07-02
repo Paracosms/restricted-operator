@@ -6,7 +6,7 @@ filter:
   normalize-roots-lowercase: true
 
 permissions:
-  bypass-users: []
+  bypass-usernames: []
   notify: []
 
 blocked-roots:
@@ -46,7 +46,7 @@ messages:
   blocked-player-command: "That command is disabled for camp safety. Ask an instructor if you need help."
   blocked-command-block-nearby: "A command block command near you was blocked for camp safety. Ask an instructor for help."
   blocked-command-block-editor: "A command block you placed or edited tried to run a disabled command. Ask an instructor for help."
-  blocked-instructor-notify: "&e[RestrictedOperator]&f Blocked {source} at {location}: {reason}; command=&7{command}"
+  blocked-instructor-notify: "&e[RestrictedOperator]&f Blocked {source} at {location}: Last modified by {player}; reason=[{reason}]; command=&7{command}"
 
 notifications:
   notify-instructors: true
@@ -56,7 +56,7 @@ notifications:
   cooldown-seconds-per-source: 10
 
 attribution:
-  editor-hint-expire-minutes: 120
+  tracking-prune-interval-days: 7
 
 logging:
   log-blocked-commands: true
