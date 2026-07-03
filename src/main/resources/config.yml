@@ -24,6 +24,7 @@ blocked-roots:
   - clear
   - execute
   - function
+  - schedule
   - data
   - damage
   - worldborder

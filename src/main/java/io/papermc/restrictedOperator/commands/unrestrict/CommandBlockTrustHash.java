@@ -9,6 +9,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.Locale;
+import java.util.UUID;
 
 final class CommandBlockTrustHash {
     private CommandBlockTrustHash() {
@@ -46,8 +47,9 @@ final class CommandBlockTrustHash {
 
     // random bs equation go !
     static Integer hashLocation(Location location) {
-        int hash = location.getBlockX() * 73428767 ^ location.getBlockY() * 91227153 ^ location.getBlockZ() * 43828933;
+        int hash = location.getWorld().getUID().hashCode() ^ location.getBlockX() * 73428767 ^ location.getBlockY() * 91227153 ^ location.getBlockZ() * 43828933;
         hash ^= hash >>> 16;
         return hash;
     }
+
 }

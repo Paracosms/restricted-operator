@@ -119,6 +119,24 @@ public final class ConfigManager {
 
     public boolean removeNotifyUsername(String username) { return updateUsernameList("permissions.notify", username, false); }
 
+    public List<String> getBlockedRoots() { return getNormalizedConfigList("blocked-roots"); }
+
+    public List<String> getBlockedNamespaces() { return getNormalizedConfigList("blocked-namespaces"); }
+
+    public List<String> getBlockedSelectors() { return getNormalizedConfigList("blocked-selectors"); }
+
+    public boolean addBlockedRoot(String root) { return updateConfigList("blocked-roots", root, true); }
+
+    public boolean removeBlockedRoot(String root) { return updateConfigList("blocked-roots", root, false); }
+
+    public boolean addBlockedNamespace(String namespace) { return updateConfigList("blocked-namespaces", namespace, true); }
+
+    public boolean removeBlockedNamespace(String namespace) { return updateConfigList("blocked-namespaces", namespace, false); }
+
+    public boolean addBlockedSelector(String selector) { return updateConfigList("blocked-selectors", selector, true); }
+
+    public boolean removeBlockedSelector(String selector) { return updateConfigList("blocked-selectors", selector, false); }
+
     public boolean shouldLogBlockedCommands() { return logBlockedCommands; }
 
     public boolean shouldNotifyInstructors() { return notifyInstructors; }
@@ -159,6 +177,27 @@ public final class ConfigManager {
         }
 
         plugin.getConfig().set(path, new ArrayList<>(usernames));
+        plugin.saveConfig();
+        return true;
+    }
+
+    private List<String> getNormalizedConfigList(String path) {
+        return new ArrayList<>(normalizeList(plugin.getConfig().getStringList(path)));
+    }
+
+    private boolean updateConfigList(String path, String value, boolean add) {
+        String normalizedValue = value.trim().toLowerCase(Locale.ROOT);
+        if (normalizedValue.isEmpty()) {
+            return false;
+        }
+
+        Set<String> values = normalizeList(plugin.getConfig().getStringList(path));
+        boolean changed = add ? values.add(normalizedValue) : values.remove(normalizedValue);
+        if (!changed) {
+            return false;
+        }
+
+        plugin.getConfig().set(path, new ArrayList<>(values));
         plugin.saveConfig();
         return true;
     }
