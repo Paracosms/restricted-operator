@@ -6,6 +6,13 @@
 
 **This plugin may be used to teach players about admin commands and command blocks in a safe server environment without giving unrestricted access to harmful commands.**
 
+### Plugin Installation
+
+**This plugin exclusively runs on PaperMC servers at the moment. Follow the instructions [here](https://docs.papermc.io/paper/getting-started/) to create a PaperMC server.**
+1. [Download the latest release of the plugin.](https://github.com/Paracosms/restricted-operator/releases/latest)
+2. Locate the plugin's jar (e.g. restricted-operator-26.1.2.jar) and move it to your PaperMC's plugins folder. Make sure the plugin version matches the PaperMC version.
+3. Restart the server and the plugin will be active. Players with ```/op``` will now have destructive commands blocked.
+
 ### Usage
 
 ---
@@ -15,7 +22,7 @@
 **Admins must add themselves to ```bypass-usernames``` in the plugin's ```config.yml``` to bypass these restrictions.**
 
 Alternatively, using the server's console only, the following commands may be run to modify the config without opening the file:
-* ```/bypass add Player```: Unrestricts Player's command use. This is equivalent to giving ```/op``` permissions without this plugin.
+* ```/bypass add Player```: Unrestricts Player's command use. This is equivalent to using ```/op``` without this plugin.
 * ```/notify add Player```: Player will receive notifications about anyone attempting to run restricted commands.
 
 **Admins with bypass permissions have access to the following commands:**
@@ -55,7 +62,8 @@ blocked-roots:
 - plugins
 - pl
 
-# Disables all commands starting with these namespaces (e.g. any command starting with "minecraft:" will be blocked).
+# Disables all commands starting with these namespaces.
+# (e.g. any command starting with "minecraft:" will be blocked)
 blocked-namespaces:
 - minecraft
 - bukkit
