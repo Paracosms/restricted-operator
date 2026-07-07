@@ -76,6 +76,29 @@ blocked-selectors:
 - "@a"
 - "@r"
 ```
+### Gallery
+
+---
+
+**What ```/op``` users see when they try to execute a restricted command:**
+
+Note: This text can be modified inside the plugin's ```config.yml```.
+
+
+![blocked_chat_command.png](screenshots/blocked_chat_command.png)
+
+![blocked_command_block.png](screenshots/blocked_command_block.png)
+---
+
+**What admins with ```notify``` see when ```/op``` users execute a restricted command:**
+
+![notify_command_block.png](screenshots/notify_command_block.png)
+
+---
+
+**Example of the ```/unrestrict x y z``` command:**
+
+![unrestricted_command_block.png](screenshots/unrestricted_command_block.png)
 
 ### Build Instructions
 
