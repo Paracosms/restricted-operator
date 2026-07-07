@@ -93,7 +93,6 @@ Note: This text can be modified inside the plugin's ```config.yml```.
 **What admins with ```notify``` see when ```/op``` users execute a restricted command:**
 
 ![notify_command_block.png](screenshots/notify_command_block.png)
-
 ---
 
 **Example of the ```/unrestrict x y z``` command:**
