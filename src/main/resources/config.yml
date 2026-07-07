@@ -9,6 +9,7 @@ permissions:
   bypass-usernames: []
   notify: []
 
+# Disables any command starting with these roots.
 blocked-roots:
   - stop
   - restart
@@ -40,6 +41,7 @@ blocked-namespaces:
   - spigot
   - paper
 
+# Disables any command containing these selectors.
 blocked-selectors:
   - "@e"
   - "@a"
