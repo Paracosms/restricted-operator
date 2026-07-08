@@ -8,6 +8,8 @@
 
 ### Installation
 
+---
+
 Restricted Operator currently supports Paper servers. If you have not set up a Paper server yet, start with the [Paper getting started guide](https://docs.papermc.io/paper/getting-started/).
 
 1. [Download the latest release](https://github.com/Paracosms/restricted-operator/releases/latest) for your server version.
