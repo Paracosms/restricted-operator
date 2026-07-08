@@ -1,3 +1,4 @@
+# Controls what types of commands get filtered
 filter:
   player-chat-commands: true
   command-blocks: true
@@ -61,8 +62,10 @@ notifications:
   nearby-radius-blocks: 64
   cooldown-seconds-per-source: 10
 
+# Days to retain command block editor tracking records before pruning
 attribution:
   tracking-prune-interval-days: 7
 
+# Log blocked commands to the server log, including source, reason, matched pattern, and command text
 logging:
   log-blocked-commands: true

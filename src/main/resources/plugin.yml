@@ -7,7 +7,7 @@ description: Restricts unsafe commands and command blocks for operators.
 
 permissions:
   restrictedoperator.bypass-usernames:
-    description: Bypass command safety filtering and trust command blocks.
+    description: Bypass command safety filtering.
     default: false
   restrictedoperator.notify:
     description: Receive blocked command notifications.

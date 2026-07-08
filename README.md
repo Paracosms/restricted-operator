@@ -6,12 +6,16 @@
 
 **This plugin may be used to teach players about admin commands and command blocks in a safe server environment without giving unrestricted access to harmful commands.**
 
-### Plugin Installation
+### Installation
 
-**This plugin exclusively runs on PaperMC servers at the moment. Follow the instructions [here](https://docs.papermc.io/paper/getting-started/) to create a PaperMC server.**
-1. [Download the latest release of the plugin.](https://github.com/Paracosms/restricted-operator/releases/latest)
-2. Locate the plugin's jar (e.g. restricted-operator-26.1.2.jar) and move it to your PaperMC's plugins folder. Make sure the plugin version matches the PaperMC version.
-3. Restart the server and the plugin will be active. Players with ```/op``` will now have destructive commands blocked.
+Restricted Operator currently supports Paper servers. If you have not set up a Paper server yet, start with the [Paper getting started guide](https://docs.papermc.io/paper/getting-started/).
+
+1. [Download the latest release](https://github.com/Paracosms/restricted-operator/releases/latest) for your server version.
+2. Place the `restricted-operator-<version>.jar` file in your server's `plugins` directory.
+3. Start or restart the server.
+4. Check the server log to confirm the plugin loaded successfully.
+
+After startup, players with `/op` will still have operator status, but commands matching this plugin's restrictions will be blocked until you adjust the configuration.
 
 ### Usage
 
